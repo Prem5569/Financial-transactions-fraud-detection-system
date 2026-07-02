@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FraudShield — Financial Fraud Detection</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+        </div>
+        <span class="logo-text">FraudShield</span>
+        <span class="logo-badge">ML Powered</span>
+      </div>
+      <div class="header-stats" id="header-stats">
+        <div class="hstat">
+          <span class="hstat-val" id="hs-total">0</span>
+          <span class="hstat-label">Checked</span>
+        </div>
+        <div class="hstat-divider"></div>
+        <div class="hstat">
+          <span class="hstat-val red" id="hs-fraud">0</span>
+          <span class="hstat-label">Fraud</span>
+        </div>
+        <div class="hstat-divider"></div>
+        <div class="hstat">
+          <span class="hstat-val green" id="hs-legit">0</span>
+          <span class="hstat-label">Legit</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <main class="main-grid">
+
+    <!-- LEFT: FORM PANEL -->
+    <section class="panel form-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Analyze Transaction</h2>
+        <p class="panel-sub">Fill in transaction details to check for fraud signals</p>
+      </div>
+
+      <div class="form-grid">
+
+        <!-- Amount -->
+        <div class="field full">
+          <label class="field-label">Transaction Amount (₹)</label>
+          <div class="input-wrap">
+            <span class="input-prefix">₹</span>
+            <input type="number" id="amount" class="field-input padded" placeholder="e.g. 4500" min="1" step="0.01" />
+          </div>
+        </div>
+
+        <!-- Transaction Type -->
+        <div class="field">
+          <label class="field-label">Transaction Type</label>
+          <select id="transaction_type" class="field-input">
+            <option value="0">Purchase</option>
+            <option value="1">Transfer</option>
+            <option value="2">Withdrawal</option>
+          </select>
+        </div>
+
+        <!-- Merchant Category -->
+        <div class="field">
+          <label class="field-label">Merchant Category</label>
+          <select id="merchant_category" class="field-input">
+            <option value="0">Grocery</option>
+            <option value="1">Restaurant</option>
+            <option value="2">Online Shopping</option>
+            <option value="3">Travel</option>
+            <option value="4">ATM / Cash</option>
+          </select>
+        </div>
+
+        <!-- Hour of Day -->
+        <div class="field">
+          <label class="field-label">Hour of Transaction (24h)</label>
+          <input type="number" id="hour" class="field-input" placeholder="e.g. 14" min="0" max="23" />
+          <span class="field-hint">0 = midnight, 23 = 11 PM</span>
+        </div>
+
+        <!-- Distance from home -->
+        <div class="field">
+          <label class="field-label">Distance from Home (km)</label>
+          <input type="number" id="distance_from_home" class="field-input" placeholder="e.g. 20" min="0" step="0.1" />
+        </div>
+
+        <!-- Transactions in last 1 hour -->
+        <div class="field">
+          <label class="field-label">Transactions in Last 1 Hour</label>
+          <input type="number" id="num_transactions_1h" class="field-input" placeholder="e.g. 2" min="0" max="50" />
+        </div>
+
+        <!-- Previous fraud flag -->
+        <div class="field full">
+          <label class="field-label">Previous Fraud Flag on Account?</label>
+          <div class="toggle-group">
+            <label class="toggle-opt">
+              <input type="radio" name="prev_fraud" value="0" checked />
+              <span class="toggle-btn">No</span>
+            </label>
+            <label class="toggle-opt">
+              <input type="radio" name="prev_fraud" value="1" />
+              <span class="toggle-btn">Yes</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary" id="analyze-btn" onclick="analyzeTransaction()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Analyze Transaction
+        </button>
+        <button class="btn-ghost" onclick="fillSample('fraud')">Load Fraud Sample</button>
+        <button class="btn-ghost" onclick="fillSample('legit')">Load Legit Sample</button>
+      </div>
+    </section>
+
+    <!-- RIGHT: RESULT + HISTORY -->
+    <section class="right-col">
+
+      <!-- RESULT CARD -->
+      <div class="panel result-panel" id="result-panel">
+        <div class="result-placeholder" id="result-placeholder">
+          <div class="placeholder-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <p>Submit a transaction to see the fraud analysis result here</p>
+        </div>
+
+        <div class="result-content hidden" id="result-content">
+          <div class="result-top">
+            <div>
+              <div class="result-verdict" id="result-verdict">—</div>
+              <div class="result-txn-id" id="result-txn-id">—</div>
+            </div>
+            <div class="gauge-wrap">
+              <canvas id="gauge-canvas" width="110" height="110"></canvas>
+              <div class="gauge-label">
+                <span id="gauge-pct">0%</span>
+                <span class="gauge-sublabel">Fraud Risk</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-meta" id="result-meta"></div>
+
+          <div class="risk-bar-section">
+            <div class="risk-bar-label">
+              <span>Risk Score</span>
+              <span id="risk-score-val">0%</span>
+            </div>
+            <div class="risk-bar-track">
+              <div class="risk-bar-fill" id="risk-bar-fill"></div>
+            </div>
+          </div>
+
+          <div class="risk-factors-section" id="risk-factors-section">
+            <div class="rf-title">⚠ Risk Signals Detected</div>
+            <ul class="rf-list" id="rf-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY TABLE -->
+      <div class="panel history-panel">
+        <div class="panel-header between">
+          <h2 class="panel-title">Recent Transactions</h2>
+          <button class="btn-ghost small" onclick="loadHistory()">Refresh</button>
+        </div>
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Risk</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody id="history-body">
+              <tr><td colspan="5" class="empty-row">No transactions yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
